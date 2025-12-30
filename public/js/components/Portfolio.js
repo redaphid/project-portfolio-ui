@@ -94,36 +94,43 @@ export default function Portfolio() {
     `
   }
 
+  // Check if we have any actual data (not just loading)
+  // Only show skeletons when we have no data at all
+  const hasAnyData = data && Object.keys(data).length > 0
+
   // Progressive general layout
   return html`
     <main class="portfolio dashboard ${isLoading ? 'streaming' : 'complete'}">
       ${isLoading && html`<${StatusArea} />`}
 
-      <${ProgressiveHeader} data=${data} isLoading=${isLoading} />
-      <${ProgressiveStats} data=${data} isLoading=${isLoading} />
+      <${ProgressiveHeader} data=${data} isLoading=${isLoading} hasAnyData=${hasAnyData} />
+      <${ProgressiveStats} data=${data} isLoading=${isLoading} hasAnyData=${hasAnyData} />
       <${ProgressiveSkills}
         data=${data}
         isLoading=${isLoading}
+        hasAnyData=${hasAnyData}
         onSkillClick=${handleSkillClick}
       />
       <${ProgressiveProjects}
         data=${data}
         isLoading=${isLoading}
+        hasAnyData=${hasAnyData}
         onProjectClick=${handleProjectClick}
         onTechClick=${handleTechClick}
       />
-      <${ProgressiveHighlights} data=${data} isLoading=${isLoading} />
+      <${ProgressiveHighlights} data=${data} isLoading=${isLoading} hasAnyData=${hasAnyData} />
     </main>
   `
 }
 
 /**
- * Progressive Header - shows skeleton until header data arrives
+ * Progressive Header - shows skeleton only when no data at all
  */
-const ProgressiveHeader = ({ data, isLoading }) => {
+const ProgressiveHeader = ({ data, isLoading, hasAnyData }) => {
   const hasHeader = data?.header?.name || data?.header?.tagline
 
-  if (!hasHeader && isLoading) {
+  // Only show skeleton when loading AND we have no data yet
+  if (!hasHeader && isLoading && !hasAnyData) {
     return html`<${HeaderSkeleton} />`
   }
 
@@ -140,12 +147,12 @@ const ProgressiveHeader = ({ data, isLoading }) => {
 }
 
 /**
- * Progressive Stats - shows skeleton until stats arrive
+ * Progressive Stats - shows skeleton only when no data at all
  */
-const ProgressiveStats = ({ data, isLoading }) => {
+const ProgressiveStats = ({ data, isLoading, hasAnyData }) => {
   const hasStats = data?.stats?.length > 0
 
-  if (!hasStats && isLoading) {
+  if (!hasStats && isLoading && !hasAnyData) {
     return html`<${StatsSkeleton} count=${4} />`
   }
 
@@ -159,12 +166,12 @@ const ProgressiveStats = ({ data, isLoading }) => {
 }
 
 /**
- * Progressive Skills - shows skeleton until skills arrive
+ * Progressive Skills - shows skeleton only when no data at all
  */
-const ProgressiveSkills = ({ data, isLoading, onSkillClick }) => {
+const ProgressiveSkills = ({ data, isLoading, hasAnyData, onSkillClick }) => {
   const hasSkills = data?.skills?.length > 0
 
-  if (!hasSkills && isLoading) {
+  if (!hasSkills && isLoading && !hasAnyData) {
     return html`<${SkillsSkeleton} categories=${3} itemsPerCategory=${4} />`
   }
 
@@ -181,13 +188,13 @@ const ProgressiveSkills = ({ data, isLoading, onSkillClick }) => {
 }
 
 /**
- * Progressive Projects - shows skeleton until projects arrive
+ * Progressive Projects - shows skeleton only when no data at all
  */
-const ProgressiveProjects = ({ data, isLoading, onProjectClick, onTechClick }) => {
+const ProgressiveProjects = ({ data, isLoading, hasAnyData, onProjectClick, onTechClick }) => {
   const projects = data?.projects || []
   const hasProjects = projects.length > 0
 
-  if (!hasProjects && isLoading) {
+  if (!hasProjects && isLoading && !hasAnyData) {
     return html`<${ProjectsSkeleton} count=${4} />`
   }
 
@@ -207,11 +214,6 @@ const ProgressiveProjects = ({ data, isLoading, onProjectClick, onTechClick }) =
             />
           </div>
         `)}
-        ${isLoading && projects.length < 4 && html`
-          ${Array(4 - projects.length).fill(0).map((_, i) => html`
-            <${ProjectCardSkeleton} key=${"skeleton-" + i} />
-          `)}
-        `}
       </div>
     </section>
   `
@@ -278,12 +280,12 @@ const ProjectCardSkeleton = () => html`
 `
 
 /**
- * Progressive Highlights - shows skeleton until highlights arrive
+ * Progressive Highlights - shows skeleton only when no data at all
  */
-const ProgressiveHighlights = ({ data, isLoading }) => {
+const ProgressiveHighlights = ({ data, isLoading, hasAnyData }) => {
   const hasHighlights = data?.highlights?.length > 0
 
-  if (!hasHighlights && isLoading) {
+  if (!hasHighlights && isLoading && !hasAnyData) {
     return html`<${HighlightsSkeleton} count=${3} />`
   }
 
