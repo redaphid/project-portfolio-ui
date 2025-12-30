@@ -1,4 +1,4 @@
-import { portfolioData, portfolioLoading, streamingContent, messages, statusMessage, toolCalls } from "./store.js"
+import { portfolioData, portfolioLoading, streamingContent, messages, statusMessage, toolCalls, suggestedFollowups } from "./store.js"
 import { MCP_BACKEND_HOST } from "./config.js"
 
 const DEFAULT_PROMPT = "Generate a professional developer portfolio. Focus on the most interesting and actively developed projects. Highlight unique technical expertise."
@@ -128,6 +128,12 @@ const handleMessage = (data) => {
       pendingResolve = null
     }
   }
+
+  // Handle suggested followup questions from the AI
+  if (data.type === "suggested_followups") {
+    suggestedFollowups.value = data.followups || []
+    return
+  }
 }
 
 const sendChat = async (content, updateUrl = true) => {
@@ -138,6 +144,7 @@ const sendChat = async (content, updateUrl = true) => {
   streamingContent.value = ""
   statusMessage.value = "Connecting..."
   toolCalls.value = []
+  suggestedFollowups.value = []  // Clear old suggestions when starting new query
 
   await connect()
 

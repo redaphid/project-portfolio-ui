@@ -1,6 +1,6 @@
 import { html } from "https://esm.sh/htm@3/preact"
 import { useState, useRef, useEffect } from "https://esm.sh/preact@10/hooks"
-import { messages, chatLoading, portfolioLoading } from "../lib/store.js"
+import { messages, chatLoading, portfolioLoading, suggestedFollowups } from "../lib/store.js"
 import { sendChat } from "../lib/api.js"
 
 export default function Chat() {
@@ -71,6 +71,23 @@ export default function Chat() {
               <span class="dot"></span>
               <span class="dot"></span>
               <span class="dot"></span>
+            </div>
+          </div>
+        `}
+
+        ${!portfolioLoading.value && suggestedFollowups.value.length > 0 && html`
+          <div class="followup-suggestions">
+            <span class="followup-label">Follow-up questions:</span>
+            <div class="followup-chips">
+              ${suggestedFollowups.value.map((q, i) => html`
+                <button
+                  key=${i}
+                  class="followup-chip"
+                  onClick=${() => handleSuggestionClick(q)}
+                >
+                  ${q}
+                </button>
+              `)}
             </div>
           </div>
         `}

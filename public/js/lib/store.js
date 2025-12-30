@@ -7,5 +7,6 @@ const messages = signal([])
 const chatLoading = signal(false)
 const statusMessage = signal("")
 const toolCalls = signal([])
+const suggestedFollowups = signal([])
 
-export { portfolioData, portfolioLoading, streamingContent, messages, chatLoading, statusMessage, toolCalls }
+export { portfolioData, portfolioLoading, streamingContent, messages, chatLoading, statusMessage, toolCalls, suggestedFollowups }
