@@ -1,6 +1,6 @@
 import { html } from "https://esm.sh/htm@3/preact"
 import { useMemo, useRef, useEffect } from "https://esm.sh/preact@10/hooks"
-import { portfolioData, portfolioLoading, streamingContent } from "../lib/store.js"
+import { portfolioData, portfolioLoading, streamingContent, toolCalls } from "../lib/store.js"
 import { sendChat } from "../lib/api.js"
 import { parsePartialJson } from "../lib/partial-json.js"
 import DashboardHeader from "./DashboardHeader.js"
@@ -75,11 +75,14 @@ export default function Portfolio() {
   // Determine which layout to use
   const layout = data?.layout || "general"
 
+  // Check if we should show the status area (when loading or has tool call history)
+  const hasToolCalls = toolCalls.value.length > 0
+
   // For non-general layouts, render progressively with partial data
   if (layout === "technology") {
     return html`
       <main class="portfolio">
-        ${isLoading && html`<${StatusArea} />`}
+        <${StatusArea} />
         <${TechnologyLayout} data=${data} key="tech-layout" />
       </main>
     `
@@ -88,7 +91,7 @@ export default function Portfolio() {
   if (layout === "project") {
     return html`
       <main class="portfolio">
-        ${isLoading && html`<${StatusArea} />`}
+        <${StatusArea} />
         <${ProjectLayout} data=${data} key="project-layout" />
       </main>
     `
@@ -101,7 +104,7 @@ export default function Portfolio() {
   // Progressive general layout
   return html`
     <main class="portfolio dashboard ${isLoading ? 'streaming' : 'complete'}">
-      ${isLoading && html`<${StatusArea} />`}
+      <${StatusArea} />
 
       <${ProgressiveHeader} data=${data} isLoading=${isLoading} hasAnyData=${hasAnyData} />
       <${ProgressiveStats} data=${data} isLoading=${isLoading} hasAnyData=${hasAnyData} />

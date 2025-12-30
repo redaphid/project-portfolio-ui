@@ -1,6 +1,6 @@
 import { html } from "https://esm.sh/htm@3/preact"
 import { useState, useRef, useEffect } from "https://esm.sh/preact@10/hooks"
-import { messages, chatLoading, portfolioLoading, suggestedFollowups } from "../lib/store.js"
+import { messages, chatLoading, portfolioLoading, suggestedFollowups, revertToMessage, toolCalls } from "../lib/store.js"
 import { sendChat } from "../lib/api.js"
 
 export default function Chat() {
@@ -28,6 +28,16 @@ export default function Chat() {
     setInput(suggestion)
     await sendChat(suggestion)
     setInput("")
+  }
+
+  const handleRevert = (index) => {
+    if (portfolioLoading.value) return
+    revertToMessage(index)
+    // Also restore tool calls for that message
+    const msg = messages.value[index]
+    if (msg?.toolCallSnapshot) {
+      toolCalls.value = msg.toolCallSnapshot
+    }
   }
 
   const suggestions = [
@@ -62,6 +72,16 @@ export default function Chat() {
         ${messages.value.map((m, i) => html`
           <div key=${i} class="chat-message ${m.role}">
             <div class="message-content">${m.content}</div>
+            ${m.portfolioSnapshot && html`
+              <button
+                class="revert-btn"
+                onClick=${() => handleRevert(i)}
+                title="Restore this portfolio view"
+                disabled=${portfolioLoading.value}
+              >
+                ↩
+              </button>
+            `}
           </div>
         `)}
 

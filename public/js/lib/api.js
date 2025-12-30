@@ -1,4 +1,4 @@
-import { portfolioData, portfolioLoading, streamingContent, messages, statusMessage, toolCalls, suggestedFollowups } from "./store.js"
+import { portfolioData, portfolioLoading, streamingContent, messages, statusMessage, toolCalls, toolCallHistory, suggestedFollowups } from "./store.js"
 import { MCP_BACKEND_HOST } from "./config.js"
 
 const DEFAULT_PROMPT = "Generate a professional developer portfolio. Focus on the most interesting and actively developed projects. Highlight unique technical expertise."
@@ -97,16 +97,34 @@ const handleMessage = (data) => {
 
   if (data.type === "content_done" || data.type === "assistant_message") {
     const content = data.content || data.portfolio
+    let parsedPortfolio = null
     if (content) {
       try {
         const jsonMatch = content.match(/\{[\s\S]*\}/)
         if (jsonMatch) {
-          portfolioData.value = JSON.parse(jsonMatch[0])
+          parsedPortfolio = JSON.parse(jsonMatch[0])
+          portfolioData.value = parsedPortfolio
         }
       } catch (e) {
         console.error("Failed to parse portfolio JSON:", e)
       }
     }
+
+    // Update the last user message with the portfolio snapshot (for revert functionality)
+    const lastUserIndex = messages.value.findLastIndex(m => m.role === "user")
+    if (lastUserIndex >= 0 && parsedPortfolio) {
+      const updatedMessages = [...messages.value]
+      updatedMessages[lastUserIndex] = {
+        ...updatedMessages[lastUserIndex],
+        portfolioSnapshot: parsedPortfolio,
+        toolCallSnapshot: [...toolCalls.value]
+      }
+      messages.value = updatedMessages
+    }
+
+    // Save tool call history for this conversation turn
+    toolCallHistory.value = [...toolCallHistory.value, [...toolCalls.value]]
+
     portfolioLoading.value = false
     streamingContent.value = ""
     statusMessage.value = ""

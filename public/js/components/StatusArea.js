@@ -1,6 +1,6 @@
 import { html } from "https://esm.sh/htm@3/preact"
 import { useState } from "https://esm.sh/preact@10/hooks"
-import { statusMessage, toolCalls } from "../lib/store.js"
+import { statusMessage, toolCalls, toolCallHistory } from "../lib/store.js"
 
 const getStatusIcon = (status) => {
   if (status === "in_progress") return "◐"
@@ -53,24 +53,34 @@ export default function StatusArea() {
   const [collapsed, setCollapsed] = useState(true)
   const message = statusMessage.value
   const calls = toolCalls.value
+  const history = toolCallHistory.value
 
-  if (!message && calls.length === 0) return null
+  // Show nothing if no calls and no history
+  if (!message && calls.length === 0 && history.length === 0) return null
 
   const inProgress = calls.filter(c => c.status === "in_progress")
   const completed = calls.filter(c => c.status === "completed")
-  const currentOp = inProgress[0]?.name || message || "Processing..."
+  const isActive = inProgress.length > 0 || message
+
+  // When not active, show the most recent tool calls from history
+  const displayCalls = calls.length > 0 ? calls : (history[history.length - 1] || [])
+  const displayCompleted = displayCalls.filter(c => c.status === "completed")
+
+  const currentOp = isActive
+    ? (inProgress[0]?.name || message || "Processing...")
+    : `${displayCompleted.length} tools used`
 
   return html`
-    <div class="tool-panel ${collapsed ? "collapsed" : ""}">
+    <div class="tool-panel sticky ${collapsed ? "collapsed" : ""} ${isActive ? "active" : "idle"}">
       <div class="tool-header" onClick=${() => setCollapsed(!collapsed)}>
-        <span class="tool-indicator ${inProgress.length > 0 ? "active" : "done"}"></span>
+        <span class="tool-indicator ${isActive ? "active" : "done"}"></span>
         <code class="tool-current">${currentOp}</code>
-        <span class="tool-count">${completed.length}/${calls.length}</span>
+        ${isActive && html`<span class="tool-count">${completed.length}/${calls.length}</span>`}
         <span class="tool-toggle">${collapsed ? "▸" : "▾"}</span>
       </div>
       ${!collapsed && html`
         <div class="tool-list">
-          ${calls.map(call => html`<${ToolCallItem} call=${call} />`)}
+          ${displayCalls.map(call => html`<${ToolCallItem} call=${call} />`)}
         </div>
       `}
     </div>
