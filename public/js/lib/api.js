@@ -1,7 +1,18 @@
 import { portfolioData, portfolioLoading, streamingContent, messages, statusMessage, toolCalls } from "./store.js"
 import { MCP_BACKEND_HOST } from "./config.js"
 
-const INITIAL_PROMPT = "Generate a professional developer portfolio. Focus on the most interesting and actively developed projects. Highlight unique technical expertise."
+const DEFAULT_PROMPT = "Generate a professional developer portfolio. Focus on the most interesting and actively developed projects. Highlight unique technical expertise."
+
+const getQueryPrompt = () => {
+  const params = new URLSearchParams(location.search)
+  return params.get("q")
+}
+
+const setQueryPrompt = (prompt) => {
+  const url = new URL(location.href)
+  url.searchParams.set("q", prompt)
+  history.pushState({ prompt }, "", url)
+}
 
 let ws = null
 let sessionId = null
@@ -119,10 +130,10 @@ const handleMessage = (data) => {
   }
 }
 
-const sendChat = async (content) => {
-  // Add user message to chat history immediately
-  messages.value = [...messages.value, { role: "user", content }]
+const sendChat = async (content, updateUrl = true) => {
+  if (updateUrl) setQueryPrompt(content)
 
+  messages.value = [...messages.value, { role: "user", content }]
   portfolioLoading.value = true
   streamingContent.value = ""
   statusMessage.value = "Connecting..."
@@ -140,6 +151,9 @@ const sendChat = async (content) => {
   })
 }
 
-const generatePortfolio = (prompt = INITIAL_PROMPT) => sendChat(prompt)
+const generatePortfolio = () => {
+  const prompt = getQueryPrompt() || DEFAULT_PROMPT
+  return sendChat(prompt, false)
+}
 
-export { generatePortfolio, sendChat, INITIAL_PROMPT }
+export { generatePortfolio, sendChat, getQueryPrompt, DEFAULT_PROMPT }

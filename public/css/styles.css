@@ -858,142 +858,181 @@ body {
   text-decoration: underline;
 }
 
-/* Status Area */
-/* Status Banner - Expandable tool call display */
-.status-banner {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 20px;
+/* Tool Panel - Claude Code style */
+.tool-panel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  margin-bottom: 16px;
   overflow: hidden;
 }
 
-.status-banner-header {
+.tool-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.status-banner-header:hover {
-  background: var(--surface-2);
-}
-
-.status-banner-icon {
-  font-size: 16px;
-}
-
-.status-banner-summary {
-  flex: 1;
-  font-size: 14px;
-  color: var(--text);
-}
-
-.status-banner-toggle {
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-.status-banner.collapsed .status-banner-content {
-  display: none;
-}
-
-.status-banner-content {
-  border-top: 1px solid var(--border);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
   gap: 8px;
-  max-height: 300px;
+  padding: 6px 10px;
+  cursor: pointer;
+  background: #161b22;
+  border-bottom: 1px solid transparent;
+  transition: background 0.15s;
+}
+
+.tool-header:hover {
+  background: #1c2128;
+}
+
+.tool-panel:not(.collapsed) .tool-header {
+  border-bottom-color: #30363d;
+}
+
+.tool-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #484f58;
+}
+
+.tool-indicator.active {
+  background: #58a6ff;
+  box-shadow: 0 0 6px #58a6ff;
+  animation: pulse 1.5s infinite;
+}
+
+.tool-indicator.done {
+  background: #3fb950;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.tool-current {
+  flex: 1;
+  color: #c9d1d9;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tool-count {
+  color: #484f58;
+  font-size: 10px;
+}
+
+.tool-toggle {
+  color: #484f58;
+  font-size: 10px;
+  width: 12px;
+  text-align: center;
+}
+
+.tool-list {
+  max-height: 200px;
   overflow-y: auto;
 }
 
-/* Individual tool call */
-.tool-call {
-  background: var(--surface-2);
-  border-radius: 6px;
-  overflow: hidden;
+/* Individual tool item */
+.tool-item {
+  border-bottom: 1px solid #21262d;
 }
 
-.tool-call-header {
+.tool-item:last-child {
+  border-bottom: none;
+}
+
+.tool-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  font-size: 13px;
-  font-family: var(--font-mono);
+  gap: 6px;
+  padding: 4px 10px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.15s;
 }
 
-.tool-call-header:hover {
-  background: var(--border);
+.tool-row:hover {
+  background: #1c2128;
 }
 
-.tool-call.in_progress .tool-call-header {
-  color: var(--accent);
-}
-
-.tool-call.completed .tool-call-header {
-  color: var(--success);
-}
-
-.tool-call.failed .tool-call-header {
-  color: #ef4444;
-}
-
-.tool-icon {
-  font-size: 14px;
-}
-
-.tool-name {
-  flex: 1;
-  font-weight: 500;
-}
-
-.tool-expand {
+.tool-status {
   font-size: 10px;
-  color: var(--text-muted);
+  width: 14px;
+  text-align: center;
 }
 
-.tool-call-details {
-  padding: 12px;
-  border-top: 1px solid var(--border);
-  background: var(--bg);
-  font-size: 12px;
+.tool-item.in_progress .tool-status {
+  color: #58a6ff;
+  animation: spin 1s linear infinite;
 }
 
-.tool-args {
-  margin-bottom: 10px;
+.tool-item.completed .tool-status {
+  color: #3fb950;
 }
 
-.tool-args code {
-  display: block;
-  margin-top: 4px;
-  padding: 8px;
-  background: var(--surface);
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  word-break: break-all;
+.tool-item.failed .tool-status {
+  color: #f85149;
 }
 
-.tool-result {
-  margin-top: 8px;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.tool-result pre {
-  margin-top: 4px;
-  padding: 8px;
-  background: var(--surface);
-  border-radius: 4px;
-  font-family: var(--font-mono);
+.tool-item .tool-name {
+  flex: 1;
+  color: #8b949e;
   font-size: 11px;
+}
+
+.tool-item.in_progress .tool-name {
+  color: #c9d1d9;
+}
+
+.tool-chevron {
+  color: #484f58;
+  font-size: 10px;
+  width: 12px;
+  text-align: center;
+}
+
+.tool-details {
+  background: #0d1117;
+  border-top: 1px solid #21262d;
+  padding: 8px 10px;
+}
+
+.tool-section {
+  margin-bottom: 8px;
+}
+
+.tool-section:last-child {
+  margin-bottom: 0;
+}
+
+.tool-label {
+  display: block;
+  color: #484f58;
+  font-size: 10px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.tool-code {
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 10px;
+  color: #8b949e;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 150px;
+  max-height: 100px;
   overflow-y: auto;
+  margin: 0;
 }
 
 /* Technology Layout */
@@ -1038,14 +1077,41 @@ body {
 .expertise-stats {
   display: flex;
   justify-content: center;
-  gap: 24px;
+  gap: 16px;
   margin-bottom: 16px;
 }
 
-.expertise-stats .stat {
-  font-size: 14px;
-  color: var(--text-muted);
+.stat-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
   font-family: var(--font-mono);
+}
+
+.stat-btn:hover {
+  border-color: var(--accent);
+  background: var(--surface);
+  transform: translateY(-2px);
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .expertise-text {
@@ -1082,13 +1148,20 @@ body {
   margin-bottom: 8px;
 }
 
-.technology-layout .project-card h3 a {
+.technology-layout .project-card h3 .project-link {
+  background: none;
+  border: none;
   color: var(--text);
-  text-decoration: none;
+  font-size: inherit;
+  font-weight: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
   transition: color 0.2s;
 }
 
-.technology-layout .project-card h3 a:hover {
+.technology-layout .project-card h3 .project-link:hover {
   color: var(--accent);
 }
 

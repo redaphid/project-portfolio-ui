@@ -3,47 +3,44 @@ import { useState } from "https://esm.sh/preact@10/hooks"
 import { statusMessage, toolCalls } from "../lib/store.js"
 
 const getStatusIcon = (status) => {
-  if (status === "in_progress") return "⏳"
+  if (status === "in_progress") return "◐"
   if (status === "completed") return "✓"
   if (status === "failed") return "✗"
-  return "•"
+  return "○"
 }
 
 const formatArgs = (args) => {
   if (!args) return null
-  return Object.entries(args)
-    .filter(([_, v]) => v !== undefined)
-    .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
-    .join(", ")
+  try {
+    return JSON.stringify(args, null, 2)
+  } catch {
+    return String(args)
+  }
 }
 
 const ToolCallItem = ({ call }) => {
   const [expanded, setExpanded] = useState(false)
   const hasDetails = call.arguments || call.result
 
-  const toggle = () => {
-    if (hasDetails) setExpanded(!expanded)
-  }
-
   return html`
-    <div class="tool-call ${call.status} ${expanded ? "expanded" : ""}">
-      <div class="tool-call-header" onClick=${toggle}>
-        <span class="tool-icon">${getStatusIcon(call.status)}</span>
+    <div class="tool-item ${call.status}">
+      <div class="tool-row" onClick=${() => hasDetails && setExpanded(!expanded)}>
+        <span class="tool-status">${getStatusIcon(call.status)}</span>
         <span class="tool-name">${call.name}</span>
-        ${hasDetails && html`<span class="tool-expand">${expanded ? "▼" : "▶"}</span>`}
+        ${hasDetails && html`<span class="tool-chevron">${expanded ? "−" : "+"}</span>`}
       </div>
       ${expanded && html`
-        <div class="tool-call-details">
+        <div class="tool-details">
           ${call.arguments && html`
-            <div class="tool-args">
-              <strong>Arguments:</strong>
-              <code>${formatArgs(call.arguments)}</code>
+            <div class="tool-section">
+              <span class="tool-label">args</span>
+              <pre class="tool-code">${formatArgs(call.arguments)}</pre>
             </div>
           `}
           ${call.result && html`
-            <div class="tool-result">
-              <strong>Result:</strong>
-              <pre>${call.result.slice(0, 500)}${call.result.length > 500 ? "..." : ""}</pre>
+            <div class="tool-section">
+              <span class="tool-label">result</span>
+              <pre class="tool-code">${call.result.slice(0, 300)}${call.result.length > 300 ? "…" : ""}</pre>
             </div>
           `}
         </div>
@@ -53,27 +50,26 @@ const ToolCallItem = ({ call }) => {
 }
 
 export default function StatusArea() {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
   const message = statusMessage.value
   const calls = toolCalls.value
 
   if (!message && calls.length === 0) return null
 
-  const completedCount = calls.filter(c => c.status === "completed").length
-  const inProgressCount = calls.filter(c => c.status === "in_progress").length
-  const summary = inProgressCount > 0
-    ? `${inProgressCount} tool${inProgressCount > 1 ? "s" : ""} running...`
-    : `${completedCount} tool${completedCount !== 1 ? "s" : ""} completed`
+  const inProgress = calls.filter(c => c.status === "in_progress")
+  const completed = calls.filter(c => c.status === "completed")
+  const currentOp = inProgress[0]?.name || message || "Processing..."
 
   return html`
-    <div class="status-banner ${collapsed ? "collapsed" : ""}">
-      <div class="status-banner-header" onClick=${() => setCollapsed(!collapsed)}>
-        <span class="status-banner-icon">${inProgressCount > 0 ? "⚡" : "✓"}</span>
-        <span class="status-banner-summary">${message || summary}</span>
-        <span class="status-banner-toggle">${collapsed ? "▶" : "▼"}</span>
+    <div class="tool-panel ${collapsed ? "collapsed" : ""}">
+      <div class="tool-header" onClick=${() => setCollapsed(!collapsed)}>
+        <span class="tool-indicator ${inProgress.length > 0 ? "active" : "done"}"></span>
+        <code class="tool-current">${currentOp}</code>
+        <span class="tool-count">${completed.length}/${calls.length}</span>
+        <span class="tool-toggle">${collapsed ? "▸" : "▾"}</span>
       </div>
-      ${!collapsed && calls.length > 0 && html`
-        <div class="status-banner-content">
+      ${!collapsed && html`
+        <div class="tool-list">
           ${calls.map(call => html`<${ToolCallItem} call=${call} />`)}
         </div>
       `}

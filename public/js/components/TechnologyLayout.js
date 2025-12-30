@@ -25,48 +25,64 @@ const renderMarkdownLinks = (text) => {
   return parts.length > 0 ? parts : text
 }
 
-export default function TechnologyLayout({ data }) {
-  const handleProjectClick = (e, projectName) => {
-    e.preventDefault()
+export default function TechnologyLayout({ data = {} }) {
+  const handleProjectClick = (projectName) => {
     sendChat(`Tell me more about the ${projectName} project`)
   }
 
-  const handleRelatedClick = (e, tech) => {
-    e.preventDefault()
+  const handleRelatedClick = (tech) => {
     sendChat(`Show me ${tech} expertise`)
   }
+
+  const handleCommitsClick = () => {
+    const count = data.expertise?.commitCount || 0
+    sendChat(`Show me notable ${data.technology || ''} commits from across all ${count} commits. Include commits from multiple projects to show breadth.`)
+  }
+
+  const handleProjectsClick = () => {
+    const count = data.expertise?.projectCount || 0
+    sendChat(`List all ${count} ${data.technology || ''} projects with brief descriptions of how ${data.technology || 'this technology'} is used in each.`)
+  }
+
+  const keyProjects = data.keyProjects || []
+  const notableCommits = data.notableCommits || []
+  const relatedSkills = data.relatedSkills || []
 
   return html`
     <main class="portfolio technology-layout">
       <${DashboardHeader}
-        name=${data.header?.name}
-        tagline=${data.header?.tagline}
+        name=${data.header?.name || ''}
+        tagline=${data.header?.tagline || ''}
       />
 
       <section class="expertise-summary">
-        <div class="expertise-badge ${data.expertise?.level?.toLowerCase()}">
-          ${data.expertise?.level}
-        </div>
         <div class="expertise-stats">
-          <span class="stat">${data.expertise?.commitCount || 0} commits</span>
-          <span class="stat">${data.expertise?.projectCount || 0} projects</span>
+          <button class="stat-btn" onClick=${handleCommitsClick}>
+            <span class="stat-value">${data.expertise?.commitCount || 0}</span>
+            <span class="stat-label">commits</span>
+          </button>
+          <button class="stat-btn" onClick=${handleProjectsClick}>
+            <span class="stat-value">${data.expertise?.projectCount || 0}</span>
+            <span class="stat-label">projects</span>
+          </button>
         </div>
-        <p class="expertise-text">${data.expertise?.summary}</p>
+        <p class="expertise-text">${data.expertise?.summary || ''}</p>
       </section>
 
       <section class="key-projects">
-        <h2>Key ${data.technology} Projects</h2>
+        <h2>Key ${data.technology || ''} Projects</h2>
         <div class="project-grid">
-          ${(data.keyProjects || []).map(project => html`
-            <div class="project-card ${project.role}">
+          ${keyProjects.map((project, i) => html`
+            <div class="project-card" key=${project.name || i}>
               <h3>
-                <a href="#" onClick=${(e) => handleProjectClick(e, project.name)}>
-                  ${project.name}
-                </a>
+                <button class="project-link" onClick=${() => handleProjectClick(project.name)}>
+                  ${project.name || ''}
+                </button>
               </h3>
-              <span class="role-badge">${project.role}</span>
               <p>${renderMarkdownLinks(project.description)}</p>
-              <a href=${project.url} target="_blank" class="github-link">View on GitHub</a>
+              ${project.url && html`
+                <a href=${project.url} target="_blank" class="github-link">View on GitHub</a>
+              `}
             </div>
           `)}
         </div>
@@ -75,22 +91,21 @@ export default function TechnologyLayout({ data }) {
       <section class="notable-commits">
         <h2>Notable Contributions</h2>
         <div class="commit-list">
-          ${(data.notableCommits || []).map(commit => html`
-            <div class="commit-item ${commit.impact?.toLowerCase()}">
-              <span class="impact-badge">${commit.impact}</span>
-              <span class="commit-date">${commit.date}</span>
+          ${notableCommits.map((commit, i) => html`
+            <div class="commit-item" key=${commit.date || i}>
+              <span class="commit-date">${commit.date || ''}</span>
               <p class="commit-summary">${renderMarkdownLinks(commit.summary)}</p>
             </div>
           `)}
         </div>
       </section>
 
-      ${data.relatedSkills?.length > 0 && html`
+      ${relatedSkills.length > 0 && html`
         <section class="related-skills">
           <h2>Related Technologies</h2>
           <div class="skill-tags">
-            ${data.relatedSkills.map(skill => html`
-              <button class="skill-tag" onClick=${(e) => handleRelatedClick(e, skill)}>
+            ${relatedSkills.map((skill, i) => html`
+              <button class="skill-tag" key=${skill || i} onClick=${() => handleRelatedClick(skill)}>
                 ${skill}
               </button>
             `)}

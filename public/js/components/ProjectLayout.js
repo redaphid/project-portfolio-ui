@@ -32,61 +32,69 @@ const getTypeIcon = (type) => {
   return "•"
 }
 
-export default function ProjectLayout({ data }) {
-  const handleTechClick = (e, tech) => {
-    e.preventDefault()
+export default function ProjectLayout({ data = {} }) {
+  const handleTechClick = (tech) => {
     sendChat(`Show me ${tech} expertise`)
   }
+
+  const techStack = data.techStack || []
+  const keyContributions = data.keyContributions || []
+  const timeline = data.timeline || []
 
   return html`
     <main class="portfolio project-layout">
       <${DashboardHeader}
-        name=${data.header?.name}
-        tagline=${data.header?.tagline}
+        name=${data.header?.name || ''}
+        tagline=${data.header?.tagline || ''}
       />
 
       <section class="project-overview">
         <div class="overview-header">
-          <span class="status-badge ${data.overview?.status?.toLowerCase()}">${data.overview?.status}</span>
           <span class="commit-count">${data.overview?.commitCount || 0} commits</span>
         </div>
-        <p class="overview-description">${data.overview?.description}</p>
-        <a href=${data.overview?.url} target="_blank" class="github-link">View on GitHub</a>
+        <p class="overview-description">${data.overview?.description || ''}</p>
+        ${data.overview?.url && html`
+          <a href=${data.overview.url} target="_blank" class="github-link">View on GitHub</a>
+        `}
       </section>
 
-      <section class="tech-stack">
-        <h2>Tech Stack</h2>
-        <div class="tech-tags">
-          ${(data.techStack || []).map(tech => html`
-            <button class="tech-tag" onClick=${(e) => handleTechClick(e, tech)}>
-              ${tech}
-            </button>
-          `)}
-        </div>
-      </section>
+      ${techStack.length > 0 && html`
+        <section class="tech-stack">
+          <h2>Tech Stack</h2>
+          <div class="tech-tags">
+            ${techStack.map((tech, i) => html`
+              <button class="tech-tag" key=${tech || i} onClick=${() => handleTechClick(tech)}>
+                ${tech}
+              </button>
+            `)}
+          </div>
+        </section>
+      `}
 
-      <section class="key-contributions">
-        <h2>Key Contributions</h2>
-        <div class="contribution-list">
-          ${(data.keyContributions || []).map(contrib => html`
-            <div class="contribution-item ${contrib.type}">
-              <span class="type-icon">${getTypeIcon(contrib.type)}</span>
-              <div class="contribution-content">
-                <h3>${contrib.title}</h3>
-                <p>${renderMarkdownLinks(contrib.description)}</p>
+      ${keyContributions.length > 0 && html`
+        <section class="key-contributions">
+          <h2>Key Contributions</h2>
+          <div class="contribution-list">
+            ${keyContributions.map((contrib, i) => html`
+              <div class="contribution-item ${contrib.type || ''}" key=${contrib.title || i}>
+                <span class="type-icon">${getTypeIcon(contrib.type)}</span>
+                <div class="contribution-content">
+                  <h3>${contrib.title || ''}</h3>
+                  <p>${renderMarkdownLinks(contrib.description)}</p>
+                </div>
               </div>
-            </div>
-          `)}
-        </div>
-      </section>
+            `)}
+          </div>
+        </section>
+      `}
 
-      ${data.timeline?.length > 0 && html`
+      ${timeline.length > 0 && html`
         <section class="project-timeline">
           <h2>Timeline</h2>
           <div class="timeline">
-            ${data.timeline.map(event => html`
-              <div class="timeline-item">
-                <span class="timeline-date">${event.date}</span>
+            ${timeline.map((event, i) => html`
+              <div class="timeline-item" key=${event.date || i}>
+                <span class="timeline-date">${event.date || ''}</span>
                 <p class="timeline-event">${renderMarkdownLinks(event.event)}</p>
               </div>
             `)}

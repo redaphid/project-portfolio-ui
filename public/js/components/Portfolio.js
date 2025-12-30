@@ -1,5 +1,5 @@
 import { html } from "https://esm.sh/htm@3/preact"
-import { useMemo } from "https://esm.sh/preact@10/hooks"
+import { useMemo, useRef, useEffect } from "https://esm.sh/preact@10/hooks"
 import { portfolioData, portfolioLoading, streamingContent } from "../lib/store.js"
 import { sendChat } from "../lib/api.js"
 import { parsePartialJson } from "../lib/partial-json.js"
@@ -38,8 +38,28 @@ export default function Portfolio() {
     return parsePartialJson(streaming)
   }, [streaming])
 
-  // Use final data if available, otherwise use streaming data
-  const data = finalData || streamingData
+  // Track last valid streaming data to prevent flickering back to old data
+  const lastValidStreaming = useRef(null)
+
+  // Update ref when we get valid streaming data
+  if (streamingData) {
+    lastValidStreaming.current = streamingData
+  }
+
+  // Reset ref when loading completes (ready for next query)
+  useEffect(() => {
+    if (!isLoading) {
+      lastValidStreaming.current = null
+    }
+  }, [isLoading])
+
+  // Logic:
+  // - While loading: use last valid streaming data if we have any, otherwise show old data
+  // - Once streaming produces valid data, stick with it (no flicker back to old)
+  // - When done loading: use final data
+  const data = isLoading
+    ? (lastValidStreaming.current || finalData)
+    : finalData
 
   // If we have no data at all and not loading, show empty state
   if (!isLoading && !data) {
@@ -55,27 +75,21 @@ export default function Portfolio() {
   // Determine which layout to use
   const layout = data?.layout || "general"
 
-  // For non-general layouts, wait for more complete data or show skeleton
+  // For non-general layouts, render progressively with partial data
   if (layout === "technology") {
-    if (!isLoading && data) {
-      return html`<${TechnologyLayout} data=${data} />`
-    }
     return html`
       <main class="portfolio">
-        <${StatusArea} />
-        <${ProgressiveTechnologyLayout} data=${data} isLoading=${isLoading} />
+        ${isLoading && html`<${StatusArea} />`}
+        <${TechnologyLayout} data=${data} key="tech-layout" />
       </main>
     `
   }
 
   if (layout === "project") {
-    if (!isLoading && data) {
-      return html`<${ProjectLayout} data=${data} />`
-    }
     return html`
       <main class="portfolio">
-        <${StatusArea} />
-        <${ProgressiveProjectLayout} data=${data} isLoading=${isLoading} />
+        ${isLoading && html`<${StatusArea} />`}
+        <${ProjectLayout} data=${data} key="project-layout" />
       </main>
     `
   }
@@ -284,32 +298,30 @@ const ProgressiveHighlights = ({ data, isLoading }) => {
 
 /**
  * Progressive Technology Layout skeleton
+ * Only shows skeleton while loading - avoids re-rendering partial data
  */
 const ProgressiveTechnologyLayout = ({ data, isLoading }) => {
-  if (!data) {
-    return html`
-      <div class="technology-layout skeleton-container">
-        <${HeaderSkeleton} />
-        <div class="skeleton" style="width: 100%; height: 200px; margin: 20px 0;" />
-        <${ProjectsSkeleton} count=${3} />
-      </div>
-    `
-  }
-  return html`<${TechnologyLayout} data=${data} />`
+  // Always show skeleton while loading to avoid layout thrashing
+  return html`
+    <div class="technology-layout skeleton-container">
+      <${HeaderSkeleton} />
+      <div class="skeleton" style="width: 100%; height: 200px; margin: 20px 0;" />
+      <${ProjectsSkeleton} count=${3} />
+    </div>
+  `
 }
 
 /**
  * Progressive Project Layout skeleton
+ * Only shows skeleton while loading - avoids re-rendering partial data
  */
 const ProgressiveProjectLayout = ({ data, isLoading }) => {
-  if (!data) {
-    return html`
-      <div class="project-layout skeleton-container">
-        <${HeaderSkeleton} />
-        <div class="skeleton" style="width: 100%; height: 150px; margin: 20px 0;" />
-        <div class="skeleton" style="width: 100%; height: 300px; margin: 20px 0;" />
-      </div>
-    `
-  }
-  return html`<${ProjectLayout} data=${data} />`
+  // Always show skeleton while loading to avoid layout thrashing
+  return html`
+    <div class="project-layout skeleton-container">
+      <${HeaderSkeleton} />
+      <div class="skeleton" style="width: 100%; height: 150px; margin: 20px 0;" />
+      <div class="skeleton" style="width: 100%; height: 300px; margin: 20px 0;" />
+    </div>
+  `
 }

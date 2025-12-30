@@ -5,10 +5,13 @@ import { sendChat } from "../lib/api.js"
 
 export default function Chat() {
   const [input, setInput] = useState("")
-  const messagesEnd = useRef(null)
+  const chatMessagesRef = useRef(null)
 
   const scrollToBottom = () => {
-    messagesEnd.current?.scrollIntoView({ behavior: "smooth" })
+    // Scroll within chat container only, not the whole page
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight
+    }
   }
 
   useEffect(scrollToBottom, [messages.value])
@@ -40,7 +43,7 @@ export default function Chat() {
         <h2>Portfolio Generator</h2>
       </div>
 
-      <div class="chat-messages">
+      <div class="chat-messages" ref=${chatMessagesRef}>
         ${messages.value.length === 0 && html`
           <div class="chat-welcome">
             <p>Tell me what kind of portfolio or resume you want to generate.</p>
@@ -71,7 +74,6 @@ export default function Chat() {
             </div>
           </div>
         `}
-        <div ref=${messagesEnd}></div>
       </div>
 
       <form class="chat-input-form" onSubmit=${handleSubmit}>
